@@ -17,16 +17,37 @@ def clean_data(data_path, questions_to_reverse_path):
     and returns the cleaned data.
     """
     with open(questions_to_reverse_path, 'r') as f:
-        questions_to_reverse = {line.strip().lower() for line in f}
+        # Create a set of lowercased questions to reverse, ignoring empty lines.
+        questions_to_reverse = {line.strip().lower() for line in f if line.strip()}
+
+    codebook_path = './data/codebook.txt'
+    codebook = {}
+    with open(codebook_path, 'r') as f:
+        for line in f:
+            # The codebook format is "CODE question text", so split on the first space.
+            parts = line.strip().split(' ', 1)
+            if len(parts) == 2:
+                # Map the code (e.g., 'EFear8') to the question text.
+                code, question = parts
+                codebook[code] = question.lower()
+                print(codebook[code])
+            else:
+                raise Exception("Unexpected codebook format")
 
     cleaned_data = []
     with open(data_path, 'r') as f:
-        reader = csv.reader(f)
+        reader = csv.reader(f, delimiter="	")
         header = next(reader)
         cleaned_data.append(header)
 
-        # Find the indices of columns to reverse
-        reverse_indices = {i for i, q in enumerate(header) if q.strip().lower() in questions_to_reverse}
+        # Find the indices of columns to reverse by using the codebook.
+        reverse_indices = set()
+        for i, q_code in enumerate(header):
+            # Look up the question text from the code in the header.
+            question_text = codebook.get(q_code.strip())
+            # Check if the looked-up question is in the reversal list.
+            if question_text and question_text in questions_to_reverse:
+                reverse_indices.add(i)
 
         for row in reader:
             cleaned_row = []
