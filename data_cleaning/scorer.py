@@ -30,9 +30,6 @@ def clean_data(data_path, questions_to_reverse_path):
                 # Map the code (e.g., 'EFear8') to the question text.
                 code, question = parts
                 codebook[code] = question.lower()
-                print(codebook[code])
-            else:
-                raise Exception("Unexpected codebook format")
 
     cleaned_data = []
     with open(data_path, 'r') as f:
@@ -61,6 +58,79 @@ def clean_data(data_path, questions_to_reverse_path):
                 else:
                     cleaned_row.append(cell)
             cleaned_data.append(cleaned_row)
+
+    # Calculate HEXACO means
+    header = cleaned_data[0]
+    hexaco_factors = ['H', 'E', 'X', 'A', 'C', 'O']
+    factor_indices = {factor: [] for factor in hexaco_factors}
+    
+    original_header_len = len(header)
+    original_header = header[:]
+
+    for i, h in enumerate(original_header):
+        if h and h[0] in factor_indices:
+            factor_indices[h[0]].append(i)
+
+    # Add new headers for factors
+    for factor in hexaco_factors:
+        header.append(f'HEXACO_{factor}')
+
+    # Process data rows to calculate and add factor means
+    for i in range(1, len(cleaned_data)):
+        row = cleaned_data[i]
+        for factor in hexaco_factors:
+            indices = factor_indices[factor]
+            scores = []
+            for idx in indices:
+                try:
+                    scores.append(int(row[idx]))
+                except (ValueError, IndexError):
+                    # Ignore if not a valid integer score
+                    pass
+            
+            if scores:
+                mean_score = sum(scores) / len(scores)
+                row.append(mean_score)
+            else:
+                raise Exception("Invalid or partial row")
+    
+    # Calculate Facet means
+    facet_indices = {}
+    def get_facet(h_str):
+        if len(h_str) > 2 and h_str[0] in hexaco_factors:
+            # Assumes format like 'HSinc1'. Returns 'Sinc'.
+            return ''.join([i for i in h_str[1:] if not i.isdigit()])
+        return None
+
+    for i, h in enumerate(original_header):
+        facet = get_facet(h)
+        if facet:
+            if facet not in facet_indices:
+                facet_indices[facet] = []
+            facet_indices[facet].append(i)
+
+    # Add new headers for facets
+    sorted_facets = sorted(facet_indices.keys())
+    for facet in sorted_facets:
+        header.append(f'FACET_{facet}')
+
+    # Process data rows for facets
+    for i in range(1, len(cleaned_data)):
+        row = cleaned_data[i]
+        for facet in sorted_facets:
+            indices = facet_indices[facet]
+            scores = []
+            for idx in indices:
+                try:
+                    scores.append(int(row[idx]))
+                except (ValueError, IndexError):
+                    pass
+            
+            if scores:
+                mean_score = sum(scores) / len(scores)
+                row.append(mean_score)
+            else:
+                raise Exception("Invalid or partial row")
 
     return cleaned_data
 
