@@ -2,7 +2,28 @@
 data - https://github.com/haghish/openpsychometrics/blob/main/HEXACO
 scoring key - https://ipip.ori.org/newHEXACO_PI_key.htm
 
----
+### Dependencies
+
+This project requires the following Python libraries:
+
+-   `torch`
+-   `pandas`
+-   `transformers`
+-   `datasets`
+-   `peft`
+-   `trl`
+-   `bitsandbytes` (for 4-bit quantization in `finetune_custom.py`)
+-   `unsloth` (for optimized training in `finetune_on_runpod.py`)
+
+You can install the common dependencies using pip:
+`pip install torch pandas transformers datasets peft trl`
+
+For `finetune_custom.py`, also install `bitsandbytes`:
+`pip install bitsandbytes`
+
+For `finetune_on_runpod.py`, install `unsloth` as specified in its environment setup:
+`pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"`
+`pip install --no-deps "xformers<0.0.27" "trl<0.9.0" peft accelerate bitsandbytes`
 
 ### Mistral 7B Fine-tuning with AMD GPU (Docker)
 
@@ -33,7 +54,7 @@ Once inside the Docker container's bash shell, follow these steps:
 
 1.  **Install Python Dependencies:**
     ```bash
-    pip install transformers datasets accelerate peft trl bitsandbytes
+    pip install transformers datasets accelerate peft trl bitsandbytes pandas
     ```
 
 2.  **Verify GPU Access:**
