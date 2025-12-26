@@ -163,7 +163,7 @@ trainer = SFTTrainer(
         output_dir="outputs",
         optim="adamw_8bit",
         seed=42,
-        evaluation_strategy="steps", # Enable evaluation
+        eval_strategy="steps", # Enable evaluation
         eval_steps=10, # Evaluate every 10 steps
     ),
 )
