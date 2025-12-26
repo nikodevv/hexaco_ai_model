@@ -89,14 +89,27 @@ def create_training_data_for_runpod():
 # Step 1: Create and load the dataset
 DATASET_PATH = create_training_data_for_runpod()
 
-# Step 2: Load Model and Tokenizer using Unsloth
+# Step 2: Load the full dataset
+raw_dataset = load_dataset("json", data_files=DATASET_PATH, split="train")
+
+# Step 3: Split into training and evaluation sets (80% train, 20% eval)
+# Using shuffle=False to ensure the last 20% is used for the evaluation set
+train_test_split_dataset = raw_dataset.train_test_split(test_size=0.2, shuffle=False)
+
+# Step 4: Format prompts for both splits
+# The formatting_prompts_func now takes an `examples` dictionary and returns a dictionary with a "text" field.
+# So we apply it to both the 'train' and 'test' (evaluation) splits.
+train_dataset = train_test_split_dataset["train"].map(formatting_prompts_func, batched=True)
+eval_dataset = train_test_split_dataset["test"].map(formatting_prompts_func, batched=True)
+
+# Step 5: Load Model and Tokenizer using Unsloth
 model, tokenizer = FastLanguageModel.from_pretrained(
     model_name="unsloth/mistral-7b-v0.3-bnb-4bit",
     max_seq_length=2048,
     load_in_4bit=True,
 )
 
-# Step 3: Add LoRA Adapters
+# Step 6: Add LoRA Adapters
 model = FastLanguageModel.get_peft_model(
     model,
     r=16,
@@ -106,7 +119,7 @@ model = FastLanguageModel.get_peft_model(
     bias="none",
 )
 
-# Step 4: Format prompts for training
+# Step 7: Define and apply prompt formatting function
 alpaca_prompt = """Below is an instruction that describes a task. Write a response that appropriately completes the request.
 
 ### Instruction:
@@ -128,14 +141,12 @@ def formatting_prompts_func(examples):
         texts.append(text)
     return {"text": texts}
 
-dataset = load_dataset("json", data_files=DATASET_PATH, split="train")
-dataset = dataset.map(formatting_prompts_func, batched=True)
-
-# Step 5: Configure and run the training
+# Step 8: Configure and run the training
 trainer = SFTTrainer(
     model=model,
     tokenizer=tokenizer,
-    train_dataset=dataset,
+    train_dataset=train_dataset,
+    eval_dataset=eval_dataset, # Added evaluation dataset
     dataset_text_field="text",
     max_seq_length=2048,
     args=TrainingArguments(
@@ -150,6 +161,8 @@ trainer = SFTTrainer(
         output_dir="outputs",
         optim="adamw_8bit",
         seed=42,
+        evaluation_strategy="steps", # Enable evaluation
+        eval_steps=10, # Evaluate every 10 steps
     ),
 )
 
