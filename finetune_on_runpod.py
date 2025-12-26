@@ -69,7 +69,7 @@ def create_training_data_for_runpod():
             if len(parts) == 2:
                 codebook[parts[0]] = parts[1]
 
-    df = pd.read_csv('data/data_cleaned_2000.csv')
+    df = pd.read_csv('data/data_cleaned_200.csv')
 
     # Corrected logic to get personality score columns
     hexaco_cols = [col for col in df.columns if col.startswith('HEXACO_')]
@@ -137,7 +137,7 @@ eval_dataset = train_test_split_dataset["test"].map(formatting_prompts_func, bat
 # Step 6: Add LoRA Adapters
 model = FastLanguageModel.get_peft_model(
     model,
-    r=32,
+    r=16,
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
     lora_alpha=16,
     lora_dropout=0.05,
