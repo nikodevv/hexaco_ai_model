@@ -33,6 +33,17 @@ HEXACO_FACET_MAPPING = {
     "AesA": "Aesthetic Appreciation", "Inqu": "Inquisitiveness", "Crea": "Creativity", "Unco": "Unconventionality"
 }
 
+def formatting_prompts_func(examples):
+    
+    instructions = examples["instruction"]
+    inputs = examples["input"]
+    outputs = examples["output"]
+    texts = []
+    for instruction, input_text, output in zip(instructions, inputs, outputs):
+        text = alpaca_prompt.format(instruction, input_text, output) + tokenizer.eos_token
+        texts.append(text)
+    return {"text": texts}
+
 def create_training_data_for_runpod():
     """
     Reads the codebook and cleaned data to generate a dataset for fine-tuning
@@ -99,12 +110,13 @@ train_test_split_dataset = raw_dataset.train_test_split(test_size=0.2, shuffle=F
 # Step 4: Format prompts for both splits
 # The formatting_prompts_func now takes an `examples` dictionary and returns a dictionary with a "text" field.
 # So we apply it to both the 'train' and 'test' (evaluation) splits.
+
 train_dataset = train_test_split_dataset["train"].map(formatting_prompts_func, batched=True)
 eval_dataset = train_test_split_dataset["test"].map(formatting_prompts_func, batched=True)
 
 # Step 5: Load Model and Tokenizer using Unsloth
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="unsloth/mistral-7-v0.3-bnb-4bit",
+    model_name="unsloth/mistral-7b-v0.3-bnb-4bit",
     max_seq_length=2048,
     load_in_4bit=True,
 )
@@ -119,7 +131,7 @@ model = FastLanguageModel.get_peft_model(
     bias="none",
 )
 
-# Step 7: Define prompt formatting function
+# Step 7: Define and apply prompt formatting function
 alpaca_prompt = """Below is an instruction that describes a task. Write a response that appropriately completes the request.
 
 ### Instruction:
@@ -131,23 +143,7 @@ alpaca_prompt = """Below is an instruction that describes a task. Write a respon
 ### Response:
 {}"""
 
-def formatting_prompts_func(examples):
-    instructions = examples["instruction"]
-    inputs = examples["input"]
-    outputs = examples["output"]
-    texts = []
-    for instruction, input_text, output in zip(instructions, inputs, outputs):
-        text = alpaca_prompt.format(instruction, input_text, output) + tokenizer.eos_token
-        texts.append(text)
-    return {"text": texts}
-
-# Step 8: Apply prompt formatting to both splits
-# The formatting_prompts_func now takes an `examples` dictionary and returns a dictionary with a "text" field.
-# So we apply it to both the 'train' and 'test' (evaluation) splits.
-train_dataset = train_test_split_dataset["train"].map(formatting_prompts_func, batched=True)
-eval_dataset = train_test_split_dataset["test"].map(formatting_prompts_func, batched=True)
-
-# Step 9: Configure and run the training
+# Step 8: Configure and run the training
 trainer = SFTTrainer(
     model=model,
     tokenizer=tokenizer,
