@@ -1,5 +1,6 @@
 import json
 import torch
+import psutil
 import pandas as pd
 from datasets import load_dataset
 from unsloth import FastLanguageModel
