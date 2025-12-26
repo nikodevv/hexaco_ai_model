@@ -152,7 +152,6 @@ trainer = SFTTrainer(
     eval_dataset=eval_dataset, # Added evaluation dataset
     dataset_text_field="text",
     max_seq_length=2048,
-    dataset_num_proc=19,  ## Training on 15vpcu instance, recommendation is to do + 4
     args=TrainingArguments(
         per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
