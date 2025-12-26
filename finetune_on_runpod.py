@@ -69,7 +69,7 @@ def create_training_data_for_runpod():
             if len(parts) == 2:
                 codebook[parts[0]] = parts[1]
 
-    df = pd.read_csv('data/data_cleaned_partial.csv')
+    df = pd.read_csv('data/data_cleaned_2000.csv')
 
     # Corrected logic to get personality score columns
     hexaco_cols = [col for col in df.columns if col.startswith('HEXACO_')]
