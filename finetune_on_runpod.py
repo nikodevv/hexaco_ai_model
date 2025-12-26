@@ -4,8 +4,8 @@ import psutil
 import pandas as pd
 from datasets import load_dataset
 from unsloth import FastLanguageModel
-from trl import SFTTrainer
-from transformers import TrainingArguments
+from trl import SFTTrainer, SFTConfig
+
 
 # This script is based on finetune_custom.py, adapted for RunPod with unsloth.
 
@@ -152,7 +152,7 @@ trainer = SFTTrainer(
     eval_dataset=eval_dataset, # Added evaluation dataset
     dataset_text_field="text",
     max_seq_length=2048,
-    args=TrainingArguments(
+    args=SFTConfig(
         per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
         warmup_steps=5,
