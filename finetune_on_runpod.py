@@ -137,10 +137,10 @@ eval_dataset = train_test_split_dataset["test"].map(formatting_prompts_func, bat
 # Step 6: Add LoRA Adapters
 model = FastLanguageModel.get_peft_model(
     model,
-    r=16,
+    r=32,
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
     lora_alpha=16,
-    lora_dropout=0,
+    lora_dropout=0.05,
     bias="none",
 )
 
