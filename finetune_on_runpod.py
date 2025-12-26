@@ -10,6 +10,18 @@ from transformers import TrainingArguments
 
 # --- Data Transformation Logic from finetune_custom.py ---
 
+# Step 7: Define and apply prompt formatting function
+alpaca_prompt = """Below is an instruction that describes a task. Write a response that appropriately completes the request.
+
+### Instruction:
+{}
+
+### Input:
+{}
+
+### Response:
+{}"""
+
 HEXACO_TRAIT_MAPPING = {
     "H": "Honesty-Humility",
     "E": "Emotionality",
@@ -34,7 +46,7 @@ HEXACO_FACET_MAPPING = {
 }
 
 def formatting_prompts_func(examples):
-    
+
     instructions = examples["instruction"]
     inputs = examples["input"]
     outputs = examples["output"]
@@ -130,18 +142,6 @@ model = FastLanguageModel.get_peft_model(
     lora_dropout=0,
     bias="none",
 )
-
-# Step 7: Define and apply prompt formatting function
-alpaca_prompt = """Below is an instruction that describes a task. Write a response that appropriately completes the request.
-
-### Instruction:
-{}
-
-### Input:
-{}
-
-### Response:
-{}"""
 
 # Step 8: Configure and run the training
 trainer = SFTTrainer(
