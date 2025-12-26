@@ -119,19 +119,19 @@ raw_dataset = load_dataset("json", data_files=DATASET_PATH, split="train")
 # Using shuffle=False to ensure the last 20% is used for the evaluation set
 train_test_split_dataset = raw_dataset.train_test_split(test_size=0.2, shuffle=False)
 
-# Step 4: Format prompts for both splits
-# The formatting_prompts_func now takes an `examples` dictionary and returns a dictionary with a "text" field.
-# So we apply it to both the 'train' and 'test' (evaluation) splits.
-
-train_dataset = train_test_split_dataset["train"].map(formatting_prompts_func, batched=True)
-eval_dataset = train_test_split_dataset["test"].map(formatting_prompts_func, batched=True)
-
-# Step 5: Load Model and Tokenizer using Unsloth
+# Step 4: Load Model and Tokenizer using Unsloth
 model, tokenizer = FastLanguageModel.from_pretrained(
     model_name="unsloth/mistral-7b-v0.3-bnb-4bit",
     max_seq_length=2048,
     load_in_4bit=True,
 )
+
+# Step 5: Format prompts for both splits
+# The formatting_prompts_func now takes an `examples` dictionary and returns a dictionary with a "text" field.
+# So we apply it to both the 'train' and 'test' (evaluation) splits.
+
+train_dataset = train_test_split_dataset["train"].map(formatting_prompts_func, batched=True)
+eval_dataset = train_test_split_dataset["test"].map(formatting_prompts_func, batched=True)
 
 # Step 6: Add LoRA Adapters
 model = FastLanguageModel.get_peft_model(
@@ -143,7 +143,7 @@ model = FastLanguageModel.get_peft_model(
     bias="none",
 )
 
-# Step 8: Configure and run the training
+# Step 7: Configure and run the training
 trainer = SFTTrainer(
     model=model,
     tokenizer=tokenizer,
